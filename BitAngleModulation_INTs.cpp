@@ -11,50 +11,50 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-volatile uint8_t helligkeit = 0;
-volatile uint8_t BAM_i = 0;
+volatile uint8_t helligkeit = 0;	// Die Helligkeit der LED die in der Endlosschleife verändert werden soll
+volatile uint8_t BAM_i = 0;			// BAM-Index, läuft von 0-7
 
 ISR(TIMER0_OVF0_vect)
 {
 	uint8_t BitAngle = 1 << BAM_i;
 	
-	if (BitAngle & helligkeit)	
-		PORTA = 0x03;
+	if (BitAngle & helligkeit)
+		PORTA = 0x03;	// LED(s) an
 	else
-		PORTA = 0x00;
+		PORTA = 0x00;	// LED(s) aus
 	
-	BAM_i = (BAM_i + 1) & 0x07;
+	BAM_i = (BAM_i + 1) & 0x07;	// BAM-Index hochzählen, aber auf die Werte 0-7 beschränken
 	
-	TCNT0 = -BitAngle;
+	TCNT0 = -BitAngle;	// Den counter auf "negativen" Wert setzen, damit der overflow entsprechend schnell/langsam ausgelöst wird
 }
 
 void set_ints()
 {
-	// T0_Overflow_INT aktivieren
-	TIMSK = (1 << TOIE0);
-	sei();
+	TIMSK = (1 << TOIE0);	// "Timer 0 Overflow Interrupt" aktivieren
+	sei();					// Interrupts allgemein aktivieren
 }
 
 void start_timer()
 {
-	// Prescale setzen und damit Timer starten
-	TCCR0 = 0b00000011;
+	// Prescale setzen und damit auch den Timer starten
+	// CS0 = 1, CS1 = 1 ==> System-Clock / 64
+	TCCR0 = 0b00000011; 
 }
 
 int main(void)
 {
-	int8_t dir = 1;
-	
-	DDRA = 0x03;
-	
-	set_ints();
-	start_timer();
-	
-    while(1)
-    {
+	int8_t dir = 1;	//"direction", die richtung in die die Helligkeit der sich verändern soll
+
+	DDRA = 0x03;	// Pin 0+1 von Port A als Ausgang konfigurieren
+
+	set_ints();		// Interrupt(s) aktivieren
+	start_timer();	// Counter starten
+
+	while(1)
+	{
 		helligkeit += dir;
-		if (helligkeit == 0) dir = 1;
-		if (helligkeit == 255) dir = -1;
-		_delay_ms(3);
+		if (helligkeit == 0) dir = 1;		// wenn die LED aus ist, soll sie wieder heller werden
+		if (helligkeit == 255) dir = -1;	// wenn maximale Helligkeit erreicht, soll die LED wieder dunkler werden
+		_delay_ms(3);						// Wartezeit damit man die Helligkeitsänderung sehen und nicht nur messen kann
     }
 }
