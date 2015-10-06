@@ -43,7 +43,7 @@ void start_timer()
 
 int main(void)
 {
-	int8_t dir = 1;	//"direction", die richtung in die die Helligkeit der sich verändern soll
+	int8_t dir = 1;	//"direction", die Richtung der Helligkeitsänderung
 
 	DDRA = 0x03;	// Pin 0+1 von Port A als Ausgang konfigurieren
 
